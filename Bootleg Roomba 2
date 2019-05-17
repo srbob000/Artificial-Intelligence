@@ -113,7 +113,6 @@ class Vacuum(Agent):
         return('turnright')
     elif choice == 2:
         return('turnleft')
-#print(percepts)
     return('moveforward')
     
   from random import randint
