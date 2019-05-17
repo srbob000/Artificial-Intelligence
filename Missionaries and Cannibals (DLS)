@@ -1,0 +1,99 @@
+import numpy as np
+import collections
+
+class Cannibals(object):
+
+    def __init__(self):
+        self.initial = np.array([3, 3, 1])
+        self.goal = np.array([0, 0, 0])
+
+    def actions(self, state):
+        possible = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 1], [0, 2, 1], [2, 0, 1],[3, 0, 1],[0, 3, 1], [1,2,1], [2,1,1]])
+        sending = 1 - 2 * state[2]
+        moves = []
+        for p in possible:
+            ns_ws = np.add(np.multiply(sending, p), state)
+            ns_rs = np.subtract(np.array([3, 3, 1]), ns_ws)
+            if any(ns_ws < 0): #no boat on left side
+                continue
+            if any(ns_rs < 0): #no boat on the right side
+                continue
+            if ns_ws[0] > ns_ws[1] and ns_ws[1] > 0: #boat on the left side
+                continue
+            if ns_rs[0] > ns_rs[1] and ns_rs[1] > 0: #boat on the right side
+                continue
+            moves.append(p)
+        return moves
+
+    def result(self, state, possible):
+        new_state = np.copy(state)
+        sending = 1 - 2 * state[2]
+        new_state = np.add(np.multiply(sending, possible), state)
+        return new_state
+
+    def goal_test(self, state):
+        return np.array_equal(state, self.goal)
+
+class Node:
+
+    def __init__(self, state, parent=None, possible=None):
+        self.state = state
+        self.parent = parent
+        self.possible = possible
+        self.depth = 0
+        if parent:
+            self.depth = parent.depth + 1
+
+    def __repr__(self):
+        return "{}".format(self.state)
+
+    def child_node(self, problem, possible):
+        next_state = problem.result(self.state, possible)
+        next_node = Node(next_state, self, possible)
+        return next_node
+
+    def path(self):
+        node, path_back = self, []
+        while node:
+            path_back.append(node)
+            node = node.parent
+        return list(reversed(path_back))
+
+
+def depth_limited_search(problem, limit):
+    def recursive_dls(node, problem, limit):
+        explored = []
+        if problem.goal_test(node.state):
+            return node.path()[1:]
+        elif limit == 0:
+            return 'cutoff'
+        else:
+            cutoff_occurred = False
+            for act in problem.actions(node.state):
+                child = node.child_node(problem, act)
+                result = recursive_dls(child, problem, limit - 1)
+                if result == 'cutoff':
+                    cutoff_occurred = True
+                elif result is not None:
+                    return result
+            return 'cutoff' if cutoff_occurred else None
+
+    return recursive_dls(Node(problem.initial), problem, limit)
+
+def iterative_deepening_search(problem):
+    for depth in range(1, 12):
+        result = depth_limited_search(problem, depth)
+        if result != 'cutoff':
+            return result
+
+def main():
+    move = 0
+    result = iterative_deepening_search(Cannibals())
+    if result != None:
+        for state in result:
+            move = move + 1
+            print("# of moves ", move, state)
+
+
+if __name__ == "__main__":
+    main()
