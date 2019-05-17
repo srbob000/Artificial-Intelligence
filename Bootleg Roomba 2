@@ -133,7 +133,7 @@ for i in range(200):
     for j in dirty:
         room.add_thing(Dirt(),j)
 
-#room.reveal()
+
     room.run(40)
     result["reflex10"] += room.amountDirt()/percent
 
