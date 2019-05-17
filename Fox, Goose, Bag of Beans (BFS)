@@ -1,0 +1,63 @@
+import numpy as np
+import collections
+
+def actions(state):
+    # possible
+    possible = np.array([[0,0,1,1], [0,1,0,1], [1,0,0,1], [0,0,0,1]])
+    sending = 1 - 2 * state[3]
+    for p in possible:
+        ns_ws = np.add(np.multiply(sending, p), state)
+        ns_rs = np.subtract(np.array([1, 1, 1, 1]), ns_ws)
+        
+        if ns_ws[0] < 0: #no boat on left side
+            continue
+        if ns_rs[0] < 0: #no boat on the right side
+            continue
+        if ns_ws[3] == 0: #for when the farmer isn't present
+            if ns_ws[0] == 1 and ns_ws[1] == 1:
+                continue
+            if ns_ws[1] == 1 and ns_ws[2] == 1:
+                continue
+        if ns_rs[3] == 0:
+            if ns_rs[0] == 1 and ns_rs[1] == 1: 
+                continue
+            if ns_rs[1] == 1 and ns_rs[2] == 1:
+                continue
+        yield ns_ws
+    pass
+
+
+def is_in(item, things):
+    return any((item == athing).all() for athing in things)
+
+
+def breadth_first_search2():
+    move = 0
+    node = np.array([1, 1, 1, 1])
+    goal = np.array([0, 0, 0, 0])
+    frontier = collections.deque([node])
+    explored = []
+    print(frontier)
+    if (node == goal).all():
+        return True
+    while True:
+        try:
+            node = frontier.pop()
+        except IndexError:
+            return False
+
+        explored.append(node)
+        #print(explored)
+
+        for newstate in actions(node):
+
+            if not (is_in(newstate, explored) or is_in(newstate, frontier)):
+                
+                if (newstate == goal).all():
+                    return True
+                move = move + 1
+                print("move # ", move, newstate)
+                frontier.append(newstate)
+
+
+print(breadth_first_search2())
