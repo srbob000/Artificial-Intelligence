@@ -1,0 +1,85 @@
+import numpy as np
+import random
+import time
+import sys
+from search import *
+
+def apply_action(board,action):
+
+    deltas = np.array([[-1,0,1,0],[0,1,0,-1]])
+    action_2_index = {'up':0,'right':1,'down':2,'left':3}
+    posx,posy = np.where(np.isin(board, [0]))
+    (x,y) = (posx[0],posy[0])
+    (new_x,new_y) = (x + deltas[0,action_2_index[action]],y + deltas[1,action_2_index[action]])
+
+    try:
+        el = board[new_x,new_y]
+        board[x,y] = el
+        board[new_x,new_y] = 0
+            #print(new_x, new_y)
+            #print(board)
+    except IndexError:
+           # print("IndexError")
+        pass
+    return board
+
+
+def goal_test(board):
+    goal = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
+    return np.array_equal(board,goal)
+
+def n_out_of_order(board):
+    goal = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
+    return np.count_nonzero(np.subtract(board,goal))
+
+
+def mess_up(board,actions,moves):
+
+    for iter in range(0,moves):
+        board = apply_action(board,actions[random.randint(0,3)])
+    pass
+    
+moves = []
+def recursive_dls(board,limit,sequence):
+    global moves
+    actions = ['up', 'right', 'down', 'left']
+    new_board = np.copy(board)
+    new_seq = sequence.copy()
+    if(moves):
+        return
+    for iteration in range(0,4):
+        if goal_test(new_board):
+            moves = new_seq.copy()
+            return 
+        new_board = np.copy(board)
+        new_seq = sequence.copy()
+        new_board = apply_action(new_board,actions[iteration])
+        string = actions[iteration] 
+        new_seq.append(string)
+        if limit > 0:
+            recursive_dls(new_board,limit - 1,new_seq)
+    return
+
+
+def iterative_deepening_search(board, sequence):
+    for depth in range(1,32):
+        recursive_dls(board, depth, sequence)
+        if moves:
+            return('Depth achieved: ', depth)
+            
+def main():
+
+    board = np.array([[1, 2, 3], [4, 5,6], [7, 8,0]])
+    actions = ['up','right','down','left']
+    mess_up(board, actions, 20)
+    print(board)
+    #print(n_out_of_order(board))
+    sequence =[]
+    start = time.time()
+    iterative_deepening_search(board, sequence)
+    end = time.time()
+    print(moves, '\nDepth: ',len(moves))
+    print('Time: ', end - start)
+
+if __name__ == "__main__":
+    main()
