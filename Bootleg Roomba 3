@@ -144,7 +144,7 @@ result["tabled10"] = 0
 for i in range(200):
     clear_output()
     room=GraphicRoom(12,12)#, color={'Vacuum': (200,0,0), 'Dirt': (0, 200, 200), 'Wall': (0, 0, 0),'Bump':(200,0,200)})
-#the wall is in 0 and location 11
+    #the wall is in 0 and location 11
     dirty = [[randint(1,10),randint(1,10)] for i in range(percent)]
     location = [randint(1,10),randint(8,10)]
     vac = Vacuum(tableBasedProgram)
