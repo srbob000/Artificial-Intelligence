@@ -1,0 +1,161 @@
+import sys
+sys.path.append('/home/nbuser/library/')
+# This is used to include files which are in the same folder.
+
+from utils import *
+from agents import *
+from IPython.display import clear_output
+turn = False
+
+# agents.py must be in the same folder as the notebook
+# utils.py must be in the same folder as the notebook
+
+class GraphicRoom(XYEnvironment):
+    def __init__(self, width=10, height=10):
+        super().__init__(width, height)
+        
+    def thing_classes(self):
+        return [Wall, Dirt, Bump, ReflexVacuumAgent, RandomVacuumAgent,
+                TableDrivenVacuumAgent, ModelBasedVacuumAgent]    
+        
+    def percept(self, agent):
+        '''return a list of things that are in our agent's location'''
+        things = self.list_things_at(agent.location)
+        return things
+    
+    def execute_action(self, agent, action):
+        '''changes the state of the environment based on what the agent does.'''
+        # This bump was from the last move, so remove it
+        items = self.list_things_at(agent.location, tclass=Bump)
+        if len(items) != 0:
+            self.delete_thing(items[0])
+            
+        if action == 'turnright':
+            print('{} decided to {} at location: {}'.format(str(agent)[1:-1], action, agent.location))
+            agent.turn(Direction.R)
+        elif action == 'turnleft':
+            print('{} decided to {} at location: {}'.format(str(agent)[1:-1], action, agent.location))
+            agent.turn(Direction.L)
+        elif action == 'moveforward':
+            loc = copy.deepcopy(agent.location) # find out the target location
+            if agent.direction.direction == Direction.R:
+                loc[0] += 1
+            elif agent.direction.direction == Direction.L:
+                loc[0] -= 1
+            elif agent.direction.direction == Direction.D:
+                loc[1] += 1
+            elif agent.direction.direction == Direction.U:
+                loc[1] -= 1
+            if self.is_inbounds(loc):# move only if the target is a valid location
+                print('{} decided to move {}wards at location: {}'.format(str(agent)[1:-1], agent.direction.direction, agent.location))
+                agent.moveforward()
+                agent.location = loc  # We can move forward so update it...the vacuum doesn't know anything
+            else:
+                print('{} decided to move {}wards at location: {}, but couldn\'t'.format(str(agent)[1:-1], agent.direction.direction, agent.location))
+                self.add_thing(Bump(),agent.location)
+                print(self.list_things_at(agent.location))
+                agent.moveforward(False)
+               
+        elif action == "clean":
+            items = self.list_things_at(agent.location, tclass=Dirt)
+            if len(items) != 0:
+                if agent.clean(items[0]):
+                    print('{} cleaned {} at location: {}'
+                          .format(str(agent)[1:-1], str(items[0])[1:-1], agent.location))
+                    self.delete_thing(items[0])
+                    
+    def amountDirt(self):
+        """
+        Returns the percentage of cells still occupied by dirt
+        """
+        # iterate through all cells, counting the dirty tiles
+        count = 0
+        for i in range(self.height):
+            for j in range(self.width):
+                if self.list_things_at([i, j], tclass=Dirt):
+                    count += 1
+        return count
+                    
+    def is_done(self):
+       
+        return False
+
+class Dirt(Thing):
+    __name__ = "dirt"
+
+class Bump(Thing):
+    __name__ = "bump"
+
+class Vacuum(Agent):
+    __name__ = "vacuum"
+    direction = Direction("down")
+        
+    def clean(self, thing):
+        print("Vacuum Cleaned Location {}.".format(self.location))
+        return True
+            
+    def moveforward(self, success=True):
+        print("Vacuum Moved Forward {}.".format( self.location))
+        
+    def turn(self, d):
+        self.direction = self.direction + d
+
+import random
+def tableBasedProgram(percepts):    
+    
+    data = [percept.__name__ for percept in percepts]
+    
+    if ('dirt' in data):
+        return('clean')
+    elif ('bump' in data):
+        sensor.append('Bump')
+        return('turnright')
+    else:
+        action = table.get(tuple(actions))
+        if action == None:
+            action = random.choice(['moveforward','turnright', 'turnleft', 'moveforward'])    
+    print(percepts)
+    if len(actions) >= 4:
+        actions.pop(0)        
+    actions.append(action)
+    return action
+    
+    
+
+sensor = ['Bump','moveforward']
+actions = []   
+
+table = {None: 'moveforward',
+         ('moveforward',):'turnright',
+         ('moveforward','turnright'):'turnright',
+         ('moveforward','turnright','turnright'):'turnleft',
+         ('moveforward','turnright','turnright','turnleft'):random.choice(['moveforward', 'turnleft']),
+         ('turnright','turnright','turnleft','moveforward'):'turnleft',
+         ('turnleft','turnleft','turnright','turnright'):'turnleft',
+         ('turnleft','turnright','turnright','turnleft'):'turnleft',
+         ('turnright','turnright','turnleft','turnleft'):random.choice(['moveforward', 'turnright']),
+        }
+        
+ from random import randint
+percent = 10
+result = {}
+result["tabled10"] = 0
+
+for i in range(200):
+    clear_output()
+    room=GraphicRoom(12,12)#, color={'Vacuum': (200,0,0), 'Dirt': (0, 200, 200), 'Wall': (0, 0, 0),'Bump':(200,0,200)})
+#the wall is in 0 and location 11
+    dirty = [[randint(1,10),randint(1,10)] for i in range(percent)]
+    location = [randint(1,10),randint(8,10)]
+    vac = Vacuum(tableBasedProgram)
+
+    room.add_thing(vac,location)
+    for j in dirty:
+        room.add_thing(Dirt(),j)
+
+#room.reveal()
+    room.run(40)
+    result["tabled10"] += room.amountDirt()/percent
+
+result["tabled10"] /= 200
+print("\n 10% Remaining Dirt Percent: " + str(result["tabled10"] * 100))     
