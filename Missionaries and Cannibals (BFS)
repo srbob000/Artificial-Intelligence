@@ -1,0 +1,57 @@
+import numpy as np
+import collections
+
+def actions(state):
+    # possible
+    possible = np.array([[0, 1, 1], [1, 0, 1], [1, 1, 1], [0, 2, 1], [2, 0, 1]])
+    sending = 1 - 2 * state[2]
+    for p in possible:
+        ns_ws = np.add(np.multiply(sending, p), state)
+        ns_rs = np.subtract(np.array([3, 3, 1]), ns_ws)
+        
+        if ns_rs[0] <= 3 and ns_rs[1] <= 3 and ns_ws[0] <= 3 and ns_ws[1] <= 3: 
+            if ns_ws[0] < 0: #no boat on left side
+                continue
+            if ns_rs[0] < 0: #no boat on the right side
+                continue
+            if ns_ws[0] > ns_ws[1] and ns_ws[1] > 0: #boat on the left
+                continue
+            if ns_rs[0] > ns_rs[1] and ns_rs[1] > 0: #boat on the right
+                continue
+            yield ns_ws
+    pass
+
+
+def is_in(item, things):
+    return any((item == athing).all() for athing in things)
+
+
+def breadth_first_search():
+    move = 0
+    node = np.array([3, 3, 1])
+    goal = np.array([0, 0, 0])
+    frontier = collections.deque([node])
+    explored = []
+    print(frontier)
+    if (node == goal).all():
+        return True
+    while True:
+        try:
+            node = frontier.pop()
+        except IndexError:
+            return False
+
+        explored.append(node)
+        #print(explored)
+
+        for newstate in actions(node):
+
+            if not (is_in(newstate, explored) or is_in(newstate, frontier)):
+                
+                if (newstate == goal).all():
+                    return True
+                move = move + 1
+                print("move # ", move, newstate)
+                frontier.append(newstate)
+                
+print(breadth_first_search())
