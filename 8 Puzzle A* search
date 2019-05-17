@@ -1,0 +1,49 @@
+import numpy as np
+import random
+import time
+import sys
+from search import *
+
+def apply_action(board,action):
+
+    deltas = np.array([[-1,0,1,0],[0,1,0,-1]])
+    action_2_index = {'up':0,'right':1,'down':2,'left':3}
+    posx,posy = np.where(np.isin(board, [0]))
+    (x,y) = (posx[0],posy[0])
+    (new_x,new_y) = (x + deltas[0,action_2_index[action]],y + deltas[1,action_2_index[action]])
+
+    try:
+        el = board[new_x,new_y]
+        board[x,y] = el
+        board[new_x,new_y] = 0
+            #print(new_x, new_y)
+            #print(board)
+    except IndexError:
+           # print("IndexError")
+        pass
+    return board
+
+
+def goal_test(board):
+    goal = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
+    return np.array_equal(board,goal)
+
+def n_out_of_order(board):
+    goal = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 0]])
+    return np.count_nonzero(np.subtract(board,goal))
+
+
+def mess_up(board,actions,moves):
+
+    for iter in range(0,moves):
+        board = apply_action(board,actions[random.randint(0,3)])
+    pass
+    
+#Example 1
+goal = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+puzzle = EightPuzzle((1, 2, 3, 4, 6, 8, 7, 5, 0))
+start = time.time()
+result = astar_search(puzzle).solution()
+end = time.time()
+print('Time: ', end - start, '\n', result, 'Depth: ', len(result))
