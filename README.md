@@ -5,3 +5,6 @@ The bootleg Roomba compares which is the better agent, The simple reflex agent (
 
 
 The Missionary and Cannibals compares two algorithms to see which is the better algorithm. Breadth-First search is compared against Depth-Limited search and in this problem, DLS is faster than BFS.
+
+
+The 8 puzzle uses iterative deepening and the A* search to compare which is the faster algorithm. 
